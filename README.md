@@ -7,11 +7,11 @@ npm i k-infinitescroll --save
 
 ##Usage
 
-```coffeescript
+```coffee
 app.component require 'k-infinitescroll'
 ```
 
-```coffeescript
+```coffee
 app.get '/posts', (page, model, params, next) ->
   queryObject = { $limit: 10 }
   model.root.set '_page.queryObject', queryObject
