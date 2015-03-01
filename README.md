@@ -12,13 +12,12 @@ app.component require 'k-infinitescroll'
 ```
 
 ```coffeescript
-  queryObject = { $limit: 10 }
-  model.root.set '_page.queryObject', queryObject
-  postsQuery = model.query 'posts', queryObject
-  model.subscribe postsQuery, (err) ->
-    return next err if err
-    postsQuery.ref '_page.posts'
-
+queryObject = { $limit: 10 }
+model.root.set '_page.queryObject', queryObject
+postsQuery = model.query 'posts', queryObject
+model.subscribe postsQuery, (err) ->
+  return next err if err
+  postsQuery.ref '_page.posts'
 ```
 
 ```html
