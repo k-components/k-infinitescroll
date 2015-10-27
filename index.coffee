@@ -1,3 +1,4 @@
+STEP_DEFAULT = 10
 
 module.exports = class InfiniteScroll
 	name: 'k-infinitescroll'
@@ -11,6 +12,7 @@ module.exports = class InfiniteScroll
 		element = @model.get 'element'
 		qopath = @model.get 'qopath'
 		@path = @model.get 'path'
+		@step = parseInt(@model.get('step') or STEP_DEFAULT, 10)
 		@collection = @model.get 'collection'
 		if @collection and @path and element and qopath and typeof window isnt 'undefined'
 			window.addEventListener 'scroll', @infiniteScroll
@@ -22,7 +24,7 @@ module.exports = class InfiniteScroll
 		if @queryObject and last and not @updating and @inViewport(last)
 			@updating = true
 			postQuery = @model.root._queries.get @collection, @queryObject
-			@queryObject['$limit'] += 10
+			@queryObject['$limit'] += @step
 			postQ = @model.root.query @collection, @queryObject
 			@model.subscribe postQ, (err) =>
 				@model.root.ref @path, postQ

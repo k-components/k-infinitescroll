@@ -22,7 +22,7 @@ app.get '/posts', (page, model, params, next) ->
 ```
 
 ```html
-<view name="k-infinitescroll" element="list-of-posts" qopath="_page.queryObject" path="_page.posts" collection="posts"></view>
+<view name="k-infinitescroll" element="list-of-posts" qopath="_page.queryObject" path="_page.posts" collection="posts" step="10"></view>
 
 <ul id="list-of-posts">
   {{each #root._page.posts as #post}}
