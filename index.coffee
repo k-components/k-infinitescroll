@@ -20,7 +20,7 @@ module.exports = class InfiniteScroll
 			@queryObject = @model.root.get qopath
 
 	infiniteScroll: =>
-		last = @element and @element.lastChild.previousSibling
+		last = @element and @element.lastElementChild
 		if @queryObject and last and not @updating and @inViewport(last)
 			@updating = true
 			postQuery = @model.root._queries.get @collection, @queryObject

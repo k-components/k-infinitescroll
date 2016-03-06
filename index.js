@@ -39,7 +39,7 @@
 
     InfiniteScroll.prototype.infiniteScroll = function() {
       var last, postQ, postQuery;
-      last = this.element && this.element.lastChild.previousSibling;
+      last = this.element && this.element.lastElementChild;
       if (this.queryObject && last && !this.updating && this.inViewport(last)) {
         this.updating = true;
         postQuery = this.model.root._queries.get(this.collection, this.queryObject);
