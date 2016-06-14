@@ -17,46 +17,35 @@
 
     InfiniteScroll.prototype.element = false;
 
-    InfiniteScroll.prototype.queryObject = null;
-
     InfiniteScroll.prototype.path = null;
 
-    InfiniteScroll.prototype.collection = null;
-
     InfiniteScroll.prototype.create = function() {
-      var element, qopath;
+      var element, queryHash;
       element = this.model.get('element');
-      qopath = this.model.get('qopath');
       this.path = this.model.get('path');
       this.step = parseInt(this.model.get('step') || STEP_DEFAULT, 10);
-      this.collection = this.model.get('collection');
-      if (this.collection && this.path && element && qopath && typeof window !== 'undefined') {
+      if (this.path && element && typeof window !== 'undefined') {
         window.addEventListener('scroll', this.infiniteScroll);
         this.element = document.getElementById(element);
-        return this.queryObject = this.model.root.get(qopath);
+        queryHash = this.model.root._refLists.fromMap['_page.items'].idsSegments[1];
+        return this.query = this.model.root._queries.get(queryHash);
       }
     };
 
     InfiniteScroll.prototype.infiniteScroll = function() {
-      var last, postQ, postQuery;
+      var expr, last;
       last = this.element && this.element.lastElementChild;
-      if (this.queryObject && last && !this.updating && this.inViewport(last)) {
+      if (this.query && last && !this.updating && this.inViewport(last)) {
         this.updating = true;
-        postQuery = this.model.root._queries.get(this.collection, this.queryObject);
-        this.queryObject['$limit'] += this.step;
-        postQ = this.model.root.query(this.collection, this.queryObject);
-        return this.model.subscribe(postQ, (function(_this) {
-          return function(err) {
-            _this.model.root.ref(_this.path, postQ);
-            if (postQuery) {
-              return _this.model.root.unsubscribe(postQuery, function(err) {
-                return _this.updating = false;
-              });
-            } else {
-              return _this.updating = false;
-            }
+        setTimeout(((function(_this) {
+          return function() {
+            return _this.updating = false;
           };
-        })(this));
+        })(this)), 100);
+        expr = this.query.expression;
+        expr['$limit'] += this.step;
+        this.query.setQuery(expr);
+        return this.query.send();
       }
     };
 

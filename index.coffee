@@ -4,35 +4,27 @@ module.exports = class InfiniteScroll
 	name: 'k-infinitescroll'
 	updating: false
 	element: false
-	queryObject: null
 	path: null
-	collection: null
 
 	create: ->
 		element = @model.get 'element'
-		qopath = @model.get 'qopath'
 		@path = @model.get 'path'
 		@step = parseInt(@model.get('step') or STEP_DEFAULT, 10)
-		@collection = @model.get 'collection'
-		if @collection and @path and element and qopath and typeof window isnt 'undefined'
+		if @path and element and typeof window isnt 'undefined'
 			window.addEventListener 'scroll', @infiniteScroll
 			@element = document.getElementById element
-			@queryObject = @model.root.get qopath
+			queryHash = @model.root._refLists.fromMap['_page.items'].idsSegments[1]
+			@query = @model.root._queries.get queryHash
 
 	infiniteScroll: =>
 		last = @element and @element.lastElementChild
-		if @queryObject and last and not @updating and @inViewport(last)
+		if @query and last and not @updating and @inViewport(last)
 			@updating = true
-			postQuery = @model.root._queries.get @collection, @queryObject
-			@queryObject['$limit'] += @step
-			postQ = @model.root.query @collection, @queryObject
-			@model.subscribe postQ, (err) =>
-				@model.root.ref @path, postQ
-				if postQuery
-					@model.root.unsubscribe postQuery, (err) =>
-						@updating = false
-				else
-					@updating = false
+			setTimeout((=> @updating = false), 100)
+			expr = @query.expression
+			expr['$limit'] += @step
+			@query.setQuery expr
+			@query.send()
 
 	inViewport: (el) =>
 		if el and el.getBoundingClientRect
