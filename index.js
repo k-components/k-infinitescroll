@@ -20,15 +20,18 @@
     InfiniteScroll.prototype.path = null;
 
     InfiniteScroll.prototype.create = function() {
-      var element, queryHash;
+      var element, fromMap, queryHash;
       element = this.model.get('element');
       this.path = this.model.get('path');
       this.step = parseInt(this.model.get('step') || STEP_DEFAULT, 10);
       if (this.path && element && typeof window !== 'undefined') {
         window.addEventListener('scroll', this.infiniteScroll);
         this.element = document.getElementById(element);
-        queryHash = this.model.root._refLists.fromMap['_page.items'].idsSegments[1];
-        return this.query = this.model.root._queries.get(queryHash);
+        fromMap = this.model.root._refLists.fromMap[this.path];
+        if (fromMap) {
+          queryHash = fromMap.idsSegments[1];
+          return this.query = this.model.root._queries.get(queryHash);
+        }
       }
     };
 

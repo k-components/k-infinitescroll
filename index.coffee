@@ -13,8 +13,10 @@ module.exports = class InfiniteScroll
 		if @path and element and typeof window isnt 'undefined'
 			window.addEventListener 'scroll', @infiniteScroll
 			@element = document.getElementById element
-			queryHash = @model.root._refLists.fromMap['_page.items'].idsSegments[1]
-			@query = @model.root._queries.get queryHash
+			fromMap = @model.root._refLists.fromMap[@path]
+			if fromMap
+				queryHash = fromMap.idsSegments[1]
+				@query = @model.root._queries.get queryHash
 
 	infiniteScroll: =>
 		last = @element and @element.lastElementChild
