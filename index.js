@@ -3,11 +3,12 @@
   var InfiniteScroll, STEP_DEFAULT,
     bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
-  STEP_DEFAULT = 10;
+  STEP_DEFAULT = '10';
 
   module.exports = InfiniteScroll = (function() {
     function InfiniteScroll() {
       this.inViewport = bind(this.inViewport, this);
+      this.fetchQuery = bind(this.fetchQuery, this);
       this.infiniteScroll = bind(this.infiniteScroll, this);
     }
 
@@ -17,17 +18,24 @@
 
     InfiniteScroll.prototype.element = false;
 
-    InfiniteScroll.prototype.path = null;
+    InfiniteScroll.prototype.datapath = null;
+
+    InfiniteScroll.prototype.query = null;
+
+    InfiniteScroll.prototype.step = null;
+
+    InfiniteScroll.prototype.destroy = function() {
+      return window.removeEventListener('scroll', this.infiniteScroll);
+    };
 
     InfiniteScroll.prototype.create = function() {
-      var element, fromMap, queryHash;
-      element = this.model.get('element');
-      this.path = this.model.get('path');
+      var fromMap, queryHash;
+      this.datapath = this.model.get('datapath');
+      this.element = document.getElementById(this.model.get('element'));
       this.step = parseInt(this.model.get('step') || STEP_DEFAULT, 10);
-      if (this.path && element && typeof window !== 'undefined') {
+      if (typeof window !== 'undefined') {
         window.addEventListener('scroll', this.infiniteScroll);
-        this.element = document.getElementById(element);
-        fromMap = this.model.root._refLists.fromMap[this.path];
+        fromMap = this.model.root._refLists.fromMap[this.datapath];
         if (fromMap) {
           queryHash = fromMap.idsSegments[1];
           return this.query = this.model.root._queries.get(queryHash);
@@ -36,19 +44,29 @@
     };
 
     InfiniteScroll.prototype.infiniteScroll = function() {
-      var expr, last;
+      var last;
       last = this.element && this.element.lastElementChild;
-      if (this.query && last && !this.updating && this.inViewport(last)) {
-        this.updating = true;
-        setTimeout(((function(_this) {
-          return function() {
-            return _this.updating = false;
-          };
-        })(this)), 100);
-        expr = this.query.expression;
-        expr['$limit'] += this.step;
-        this.query.setQuery(expr);
-        return this.query.send();
+      if (last && this.inViewport(last)) {
+        return this.fetchQuery();
+      }
+    };
+
+    InfiniteScroll.prototype.fetchQuery = function() {
+      if (this.query) {
+        if (this.updating) {
+          return setTimeout(this.fetchQuery, 500);
+        } else {
+          this.updating = true;
+          this.query.expression['$limit'] += this.step;
+          return this.query.fetch((function(_this) {
+            return function(err) {
+              if (err) {
+                console.error(err);
+              }
+              return _this.updating = false;
+            };
+          })(this));
+        }
       }
     };
 

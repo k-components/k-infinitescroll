@@ -1,32 +1,43 @@
-STEP_DEFAULT = 10
+STEP_DEFAULT = '10'
 
 module.exports = class InfiniteScroll
 	name: 'k-infinitescroll'
 	updating: false
 	element: false
-	path: null
+	datapath: null
+	query: null
+	step: null
+
+	destroy: ->
+		window.removeEventListener 'scroll', @infiniteScroll
 
 	create: ->
-		element = @model.get 'element'
-		@path = @model.get 'path'
+		@datapath = @model.get 'datapath'
+		@element = document.getElementById(@model.get('element'))
 		@step = parseInt(@model.get('step') or STEP_DEFAULT, 10)
-		if @path and element and typeof window isnt 'undefined'
+
+		if typeof window isnt 'undefined'
 			window.addEventListener 'scroll', @infiniteScroll
-			@element = document.getElementById element
-			fromMap = @model.root._refLists.fromMap[@path]
+			fromMap = @model.root._refLists.fromMap[@datapath]
 			if fromMap
 				queryHash = fromMap.idsSegments[1]
 				@query = @model.root._queries.get queryHash
 
 	infiniteScroll: =>
 		last = @element and @element.lastElementChild
-		if @query and last and not @updating and @inViewport(last)
-			@updating = true
-			setTimeout((=> @updating = false), 100)
-			expr = @query.expression
-			expr['$limit'] += @step
-			@query.setQuery expr
-			@query.send()
+		if last and @inViewport(last)
+			@fetchQuery()
+
+	fetchQuery: =>
+		if @query
+			if @updating
+				setTimeout @fetchQuery, 500
+			else
+				@updating = true
+				@query.expression['$limit'] += @step
+				@query.fetch (err) =>
+					console.error(err) if err
+					@updating = false
 
 	inViewport: (el) =>
 		if el and el.getBoundingClientRect
