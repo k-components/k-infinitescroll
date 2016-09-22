@@ -32,7 +32,8 @@ module.exports = class InfiniteScroll
 
 	inserted: (index, arr) =>
 		if index
-			@model.root.insert @subscribedIdList, 0, arr
+			ids = (a.id for a in arr when a?.id)
+			@model.root.insert @subscribedIdList, 0, ids
 
 	fetchQuery: =>
 		if @query and !@updating

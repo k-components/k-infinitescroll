@@ -55,8 +55,20 @@
     };
 
     InfiniteScroll.prototype.inserted = function(index, arr) {
+      var a, ids;
       if (index) {
-        return this.model.root.insert(this.subscribedIdList, 0, arr);
+        ids = (function() {
+          var i, len, results;
+          results = [];
+          for (i = 0, len = arr.length; i < len; i++) {
+            a = arr[i];
+            if (a != null ? a.id : void 0) {
+              results.push(a.id);
+            }
+          }
+          return results;
+        })();
+        return this.model.root.insert(this.subscribedIdList, 0, ids);
       }
     };
 
