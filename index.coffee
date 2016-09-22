@@ -13,8 +13,10 @@ module.exports = class InfiniteScroll
 
 	create: ->
 		@datapath = @model.get 'datapath'
+		@subscribedIdList = @model.get 'subscribedidlist'
 		@element = document.getElementById(@model.get('element'))
 		@step = parseInt(@model.get('step') or STEP_DEFAULT, 10)
+		@model.root.on 'insert', @datapath, @inserted
 
 		if typeof window isnt 'undefined'
 			window.addEventListener 'scroll', @infiniteScroll
@@ -28,16 +30,18 @@ module.exports = class InfiniteScroll
 		if last and @inViewport(last)
 			@fetchQuery()
 
+	inserted: (index, arr) =>
+		if index
+			@model.root.insert @subscribedIdList, 0, arr
+
 	fetchQuery: =>
-		if @query
-			if @updating
-				setTimeout @fetchQuery, 500
-			else
-				@updating = true
-				@query.expression['$limit'] += @step
-				@query.fetch (err) =>
-					console.error(err) if err
-					@updating = false
+		if @query and !@updating
+			@updating = true
+			@query.expression['$limit'] += @step
+			@query.fetch (err) =>
+				console.error(err) if err
+				@updating = false
+				#@getItemsIds(@query.get())
 
 	inViewport: (el) =>
 		if el and el.getBoundingClientRect
@@ -50,3 +54,4 @@ module.exports = class InfiniteScroll
 				rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
 				rect.right <= (window.innerWidth || document.documentElement.clientWidth)
 			)
+

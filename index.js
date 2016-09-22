@@ -9,6 +9,7 @@
     function InfiniteScroll() {
       this.inViewport = bind(this.inViewport, this);
       this.fetchQuery = bind(this.fetchQuery, this);
+      this.inserted = bind(this.inserted, this);
       this.infiniteScroll = bind(this.infiniteScroll, this);
     }
 
@@ -31,8 +32,10 @@
     InfiniteScroll.prototype.create = function() {
       var fromMap, queryHash;
       this.datapath = this.model.get('datapath');
+      this.subscribedIdList = this.model.get('subscribedidlist');
       this.element = document.getElementById(this.model.get('element'));
       this.step = parseInt(this.model.get('step') || STEP_DEFAULT, 10);
+      this.model.root.on('insert', this.datapath, this.inserted);
       if (typeof window !== 'undefined') {
         window.addEventListener('scroll', this.infiniteScroll);
         fromMap = this.model.root._refLists.fromMap[this.datapath];
@@ -51,22 +54,24 @@
       }
     };
 
+    InfiniteScroll.prototype.inserted = function(index, arr) {
+      if (index) {
+        return this.model.root.insert(this.subscribedIdList, 0, arr);
+      }
+    };
+
     InfiniteScroll.prototype.fetchQuery = function() {
-      if (this.query) {
-        if (this.updating) {
-          return setTimeout(this.fetchQuery, 500);
-        } else {
-          this.updating = true;
-          this.query.expression['$limit'] += this.step;
-          return this.query.fetch((function(_this) {
-            return function(err) {
-              if (err) {
-                console.error(err);
-              }
-              return _this.updating = false;
-            };
-          })(this));
-        }
+      if (this.query && !this.updating) {
+        this.updating = true;
+        this.query.expression['$limit'] += this.step;
+        return this.query.fetch((function(_this) {
+          return function(err) {
+            if (err) {
+              console.error(err);
+            }
+            return _this.updating = false;
+          };
+        })(this));
       }
     };
 
