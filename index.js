@@ -68,20 +68,24 @@
           }
           return results;
         })();
-        return this.model.root.insert(this.subscribedIdList, 0, ids);
+        return this.model.root.insert(this.subscribedIdList, index, ids);
       }
     };
 
     InfiniteScroll.prototype.fetchQuery = function() {
+      var newlength;
       if (this.query && !this.updating) {
         this.updating = true;
-        this.query.expression['$limit'] += this.step;
+        newlength = this.model.root.get(this.subscribedIdList).length + this.step;
+        this.query.expression['$limit'] = newlength;
         return this.query.fetch((function(_this) {
           return function(err) {
             if (err) {
               console.error(err);
             }
-            return _this.updating = false;
+            return setTimeout((function() {
+              return _this.updating = false;
+            }), 500);
           };
         })(this));
       }
@@ -91,7 +95,7 @@
       var rect;
       if (el && el.getBoundingClientRect) {
         rect = el.getBoundingClientRect();
-        return rect.top >= 0 && rect.left >= 0 && rect.bottom > 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) && rect.right <= (window.innerWidth || document.documentElement.clientWidth);
+        return rect.top >= 0 && rect.left >= 0 && rect.bottom > 0 && rect.bottom - 20 <= (window.innerHeight || document.documentElement.clientHeight) && rect.right <= (window.innerWidth || document.documentElement.clientWidth);
       }
     };
 

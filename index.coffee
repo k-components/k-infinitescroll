@@ -33,17 +33,24 @@ module.exports = class InfiniteScroll
 	inserted: (index, arr) =>
 		if index
 			ids = (a.id for a in arr when a?.id)
-			@model.root.insert @subscribedIdList, 0, ids
+			#console.log 'inserted', index, ids
+			@model.root.insert @subscribedIdList, index, ids
 
 	fetchQuery: =>
 		if @query and !@updating
 			@updating = true
-			@query.expression['$limit'] += @step
+			# calculate the new length of the query
+			# @subscribedIdList (and so the number of items we see on the page) may have grown since started
+			# and we must set the new length of the query to reflect that. Thus, we can't just increase
+			# the $limit by @step
+			newlength = @model.root.get(@subscribedIdList).length + @step
+			@query.expression['$limit'] = newlength
 			@query.fetch (err) =>
 				console.error(err) if err
-				@updating = false
+				setTimeout (=> @updating = false ), 500
 				#@getItemsIds(@query.get())
 
+	# bottom of the element doesn't have to show entirely, it's enough if the element is showing just partly (20 pixels from the bottom)
 	inViewport: (el) =>
 		if el and el.getBoundingClientRect
 			rect = el.getBoundingClientRect()
@@ -52,7 +59,7 @@ module.exports = class InfiniteScroll
 				rect.top >= 0 &&
 				rect.left >= 0 &&
 				rect.bottom > 0 &&
-				rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+				rect.bottom - 20 <= (window.innerHeight || document.documentElement.clientHeight) &&
 				rect.right <= (window.innerWidth || document.documentElement.clientWidth)
 			)
 
