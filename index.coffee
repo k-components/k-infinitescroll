@@ -30,11 +30,11 @@ module.exports = class InfiniteScroll
 		if last and @inViewport(last)
 			@fetchQuery()
 
-	inserted: (index, arr) =>
-		if index
+	inserted: (idx, arr) =>
+		if idx
 			ids = (a.id for a in arr when a?.id)
-			console.log 'inserted', index, ids
-			@model.root.insert @subscribedIdList, index, ids
+			#console.log 'inserted', index, ids
+			@model.root.insert @subscribedIdList, idx, ids
 
 	fetchQuery: =>
 		if @query and !@updating
