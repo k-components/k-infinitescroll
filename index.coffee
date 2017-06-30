@@ -9,7 +9,7 @@ module.exports = class InfiniteScroll
 	step: null
 
 	destroy: ->
-		window.removeEventListener 'scroll', @infiniteScroll
+		@scrollPanel.removeEventListener 'scroll', @infiniteScroll
 
 	create: ->
 		@datapath = @model.get 'datapath'
@@ -17,9 +17,11 @@ module.exports = class InfiniteScroll
 		@element = document.getElementById(@model.get('element'))
 		@step = parseInt(@model.get('step') or STEP_DEFAULT, 10)
 		@model.root.on 'insert', @datapath, @inserted
+		scrollPanel = @model.get 'scrollpanel'
+		@scrollPanel = if scrollPanel then document.getElementById(scrollPanel) else window
 
-		if typeof window isnt 'undefined'
-			window.addEventListener 'scroll', @infiniteScroll
+		if @scrollPanel?
+			@scrollPanel.addEventListener 'scroll', @infiniteScroll
 			fromMap = @model.root._refLists.fromMap[@datapath]
 			if fromMap
 				queryHash = fromMap.idsSegments[1]
