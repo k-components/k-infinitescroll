@@ -9,7 +9,8 @@ module.exports = class InfiniteScroll
 	step: null
 
 	destroy: ->
-		@scrollPanel.removeEventListener 'scroll', @infiniteScroll
+		if @scrollPanel
+			@scrollPanel.removeEventListener 'scroll', @infiniteScroll
 
 	create: ->
 		@datapath = @model.get 'datapath'
