@@ -9,34 +9,31 @@ module.exports = class InfiniteScroll
 	step: null
 
 	destroy: ->
-		if @scrollPanel
-			@scrollPanel.removeEventListener 'scroll', @infiniteScroll
+		@scrollelement.removeEventListener 'scroll', @infiniteScroll
 
 	create: ->
+		@inverted = @model.get 'inverted'
 		@datapath = @model.get 'datapath'
 		@subscribedIdList = @model.get 'subscribedidlist'
 		@element = document.getElementById(@model.get('element'))
+		@scrollelement = document.getElementById(@model.get('scrollelement')) or window
 		@step = parseInt(@model.get('step') or STEP_DEFAULT, 10)
 		@model.root.on 'insert', @datapath, @inserted
-		scrollPanel = @model.get 'scrollpanel'
-		@scrollPanel = if scrollPanel then document.getElementById(scrollPanel) else window
+		@scrollelement.addEventListener 'scroll', @infiniteScroll
 
-		if @scrollPanel?
-			@scrollPanel.addEventListener 'scroll', @infiniteScroll
-			fromMap = @model.root._refLists.fromMap[@datapath]
-			if fromMap
-				queryHash = fromMap.idsSegments[1]
-				@query = @model.root._queries.get queryHash
+		fromMap = @model.root._refLists.fromMap[@datapath]
+		if fromMap
+			queryHash = fromMap.idsSegments[1]
+			@query = @model.root._queries.get queryHash
 
 	infiniteScroll: =>
-		last = @element and @element.lastElementChild
+		last = @element and (if @inverted then @element.firstElementChild else @element.lastElementChild)
 		if last and @inViewport(last)
 			@fetchQuery()
 
 	inserted: (idx, arr) =>
 		if idx
 			ids = (a.id for a in arr when a?.id)
-			#console.log 'inserted', index, ids
 			@model.root.insert @subscribedIdList, idx, ids
 
 	fetchQuery: =>
