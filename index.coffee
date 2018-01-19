@@ -16,7 +16,8 @@ module.exports = class InfiniteScroll
 		@datapath = @model.get 'datapath'
 		@subscribedIdList = @model.get 'subscribedidlist'
 		@element = document.getElementById(@model.get('element'))
-		@scrollelement = document.getElementById(@model.get('scrollelement')) or window
+		scrollelement = @model.get('scrollelement')
+		@scrollelement = scrollelement && document.getElementById(scrollelement) or window
 		@step = parseInt(@model.get('step') or STEP_DEFAULT, 10)
 		@model.root.on 'insert', @datapath, @inserted
 		@scrollelement.addEventListener 'scroll', @infiniteScroll
