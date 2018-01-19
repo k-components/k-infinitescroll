@@ -9,7 +9,7 @@ module.exports = class InfiniteScroll
 	step: null
 
 	destroy: ->
-		@scrollelement.removeEventListener 'scroll', @infiniteScroll
+		@scrollelement.removeEventListener('scroll', @infiniteScroll) if @scrollelement
 
 	create: ->
 		@inverted = @model.get 'inverted'
