@@ -10,7 +10,6 @@ module.exports = class InfiniteScroll
 
 	destroy: ->
 		@scrollelement.removeEventListener('scroll', @infiniteScroll) if @scrollelement
-		console.log 'destroy'
 
 	create: ->
 		@inverted = @model.get 'inverted'
