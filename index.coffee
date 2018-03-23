@@ -1,6 +1,7 @@
 STEP_DEFAULT = '10'
 
 module.exports = class InfiniteScroll
+	view: __dirname
 	name: 'k-infinitescroll'
 	updating: false
 	element: false
@@ -9,9 +10,12 @@ module.exports = class InfiniteScroll
 	step: null
 
 	destroy: ->
+		console.log 'destroy'
+		@model.root.removeAllListeners 'insert', @datapath
 		@scrollelement.removeEventListener('scroll', @infiniteScroll) if @scrollelement
 
 	create: ->
+		console.log 'create'
 		@inverted = @model.get 'inverted'
 		@datapath = @model.get 'datapath'
 		@subscribedIdList = @model.get 'subscribedidlist'
@@ -33,6 +37,7 @@ module.exports = class InfiniteScroll
 			@fetchQuery()
 
 	inserted: (idx, arr) =>
+		console.log idx, arr
 		if idx
 			ids = (a.id for a in arr when a?.id)
 			@model.root.insert @subscribedIdList, idx, ids
@@ -46,7 +51,10 @@ module.exports = class InfiniteScroll
 			# the $limit by @step
 			newlength = @model.root.get(@subscribedIdList).length + @step
 			@query.expression['$limit'] = newlength
+			console.log '$limit', @query.expression['$limit']
+			console.log @query.get()
 			@query.fetch (err) =>
+				console.log @query.get()
 				console.error(err) if err
 				setTimeout (=> @updating = false ), 500
 
