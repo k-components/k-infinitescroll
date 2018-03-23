@@ -15,6 +15,7 @@ module.exports = class InfiniteScroll
 		@inverted = @model.get 'inverted'
 		@datapath = @model.get 'datapath'
 		@subscribedIdList = @model.get 'subscribedidlist'
+		console.log @datapath, @subscribedIdList
 		@element = document.getElementById(@model.get('element'))
 		scrollelement = @model.get('scrollelement')
 		@scrollelement = scrollelement && document.getElementById(scrollelement) or window
@@ -26,15 +27,34 @@ module.exports = class InfiniteScroll
 		if fromMap
 			queryHash = fromMap.idsSegments[1]
 			@query = @model.root._queries.get queryHash
+			console.log fromMap
+			console.log queryHash
+			console.log @query
 
 	infiniteScroll: =>
 		last = @element and (if @inverted then @element.firstElementChild else @element.lastElementChild)
 		if last and @inViewport(last)
 			@fetchQuery()
 
+	# this is for prefetching the shared status/referenced tweet
+	addToSharesAndTweetsx: (status) =>
+		sharedids = @model.root.at '_page.sharedids'
+		sharedidsarr = sharedids.get() or []
+
+		# notif.statusId
+		if status.statusId and status.statusId not in sharedidsarr
+			sharedids.push status.statusId
+
+		if status.share and status.share not in sharedidsarr
+			sharedids.push status.share
+
+		if status.tweet?.ref and status.tweet.ref not in sharedidsarr
+			sharedids.push status.tweet.ref
+
 	inserted: (idx, arr) =>
 		if idx
 			ids = (a.id for a in arr when a?.id)
+			console.log ids
 			@model.root.insert @subscribedIdList, idx, ids
 
 	fetchQuery: =>
@@ -49,7 +69,6 @@ module.exports = class InfiniteScroll
 			@query.fetch (err) =>
 				console.error(err) if err
 				setTimeout (=> @updating = false ), 500
-				#@getItemsIds(@query.get())
 
 	# bottom of the element doesn't have to show entirely, it's enough if the element is showing just partly (20 pixels from the bottom)
 	inViewport: (el) =>
