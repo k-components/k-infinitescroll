@@ -10,6 +10,7 @@ module.exports = class InfiniteScroll
 
 	destroy: ->
 		@scrollelement.removeEventListener('scroll', @infiniteScroll) if @scrollelement
+		console.log 'destroy'
 
 	create: ->
 		@inverted = @model.get 'inverted'
@@ -31,21 +32,6 @@ module.exports = class InfiniteScroll
 		last = @element and (if @inverted then @element.firstElementChild else @element.lastElementChild)
 		if last and @inViewport(last)
 			@fetchQuery()
-
-	# this is for prefetching the shared status/referenced tweet
-	addToSharesAndTweetsx: (status) =>
-		sharedids = @model.root.at '_page.sharedids'
-		sharedidsarr = sharedids.get() or []
-
-		# notif.statusId
-		if status.statusId and status.statusId not in sharedidsarr
-			sharedids.push status.statusId
-
-		if status.share and status.share not in sharedidsarr
-			sharedids.push status.share
-
-		if status.tweet?.ref and status.tweet.ref not in sharedidsarr
-			sharedids.push status.tweet.ref
 
 	inserted: (idx, arr) =>
 		if idx
