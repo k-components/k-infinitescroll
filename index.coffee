@@ -15,7 +15,6 @@ module.exports = class InfiniteScroll
 		@inverted = @model.get 'inverted'
 		@datapath = @model.get 'datapath'
 		@subscribedIdList = @model.get 'subscribedidlist'
-		console.log @datapath, @subscribedIdList
 		@element = document.getElementById(@model.get('element'))
 		scrollelement = @model.get('scrollelement')
 		@scrollelement = scrollelement && document.getElementById(scrollelement) or window
@@ -27,9 +26,6 @@ module.exports = class InfiniteScroll
 		if fromMap
 			queryHash = fromMap.idsSegments[1]
 			@query = @model.root._queries.get queryHash
-			console.log fromMap
-			console.log queryHash
-			console.log @query
 
 	infiniteScroll: =>
 		last = @element and (if @inverted then @element.firstElementChild else @element.lastElementChild)
@@ -54,7 +50,6 @@ module.exports = class InfiniteScroll
 	inserted: (idx, arr) =>
 		if idx
 			ids = (a.id for a in arr when a?.id)
-			console.log ids
 			@model.root.insert @subscribedIdList, idx, ids
 
 	fetchQuery: =>
