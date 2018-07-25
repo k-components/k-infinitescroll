@@ -1,8 +1,6 @@
 STEP_DEFAULT = '10'
 
 module.exports = class InfiniteScroll
-	# we need a view / index.html, otherwise the destroy function won't be called
-	view: __dirname
 	name: 'k-infinitescroll'
 	updating: false
 	element: false
@@ -11,7 +9,6 @@ module.exports = class InfiniteScroll
 	step: null
 
 	destroy: ->
-		@model.root.removeAllListeners 'insert', @datapath
 		@scrollelement.removeEventListener('scroll', @infiniteScroll) if @scrollelement
 
 	create: ->
@@ -35,8 +32,16 @@ module.exports = class InfiniteScroll
 		if last and @inViewport(last)
 			@fetchQuery()
 
+	lazyload: ->
+		window.myLazyLoad.update()
+
 	inserted: (idx, arr) =>
-		# console.log idx, arr
+		if window.myLazyLoad
+			setTimeout @lazyload, 10
+			setTimeout @lazyload, 50
+			setTimeout @lazyload, 100
+			setTimeout @lazyload, 200
+
 		if idx
 			ids = (a.id for a in arr when a?.id)
 			@model.root.insert @subscribedIdList, idx, ids
@@ -50,12 +55,10 @@ module.exports = class InfiniteScroll
 			# the $limit by @step
 			newlength = @model.root.get(@subscribedIdList).length + @step
 			@query.expression['$limit'] = newlength
-			# console.log '$limit', @query.expression['$limit']
-			# console.log @query.get()
 			@query.fetch (err) =>
-				# console.log @query.get()
 				console.error(err) if err
 				setTimeout (=> @updating = false ), 500
+				#@getItemsIds(@query.get())
 
 	# bottom of the element doesn't have to show entirely, it's enough if the element is showing just partly (20 pixels from the bottom)
 	inViewport: (el) =>
