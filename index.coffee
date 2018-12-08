@@ -20,7 +20,8 @@ module.exports = class InfiniteScroll
 		@scrollelement = scrollelement && document.getElementById(scrollelement) or window
 		@step = parseInt(@model.get('step') or STEP_DEFAULT, 10)
 		@model.root.on 'insert', @datapath, @inserted
-		@scrollelement.addEventListener 'scroll', @infiniteScroll
+
+		setTimeout (=> @scrollelement.addEventListener 'scroll', @infiniteScroll), 500		
 
 		fromMap = @model.root._refLists.fromMap[@datapath]
 		if fromMap
