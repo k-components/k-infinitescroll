@@ -22,6 +22,7 @@ module.exports = class InfiniteScroll
 		@model.root.on 'insert', @datapath, @inserted
 
 		setTimeout (=> @scrollelement.addEventListener 'scroll', @infiniteScroll), 500		
+		setTimeout (=> @scrollelement.addEventListener 'scroll', @infiniteScroll), 750		
 
 		fromMap = @model.root._refLists.fromMap[@datapath]
 		if fromMap
