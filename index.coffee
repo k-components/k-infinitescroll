@@ -21,18 +21,21 @@ module.exports = class InfiniteScroll
 		@step = parseInt(@model.get('step') or STEP_DEFAULT, 10)
 		@model.root.on 'insert', @datapath, @inserted
 
-		setTimeout (=> @scrollelement.addEventListener 'scroll', @infiniteScroll), 500		
-		setTimeout (=> @scrollelement.addEventListener 'scroll', @infiniteScroll), 750		
+		setTimeout (=> @scrollelement.addEventListener 'scroll', @infiniteScroll(1)), 500
 
 		fromMap = @model.root._refLists.fromMap[@datapath]
 		if fromMap
 			queryHash = fromMap.idsSegments[1]
 			@query = @model.root._queries.get queryHash
 
-	infiniteScroll: =>
-		last = @element and (if @inverted then @element.firstElementChild else @element.lastElementChild)
-		if last and @inViewport(last)
-			@fetchQuery()
+	infiniteScroll: (n = 1) =>
+		=>
+			last = @element and (if @inverted then @element.firstElementChild else @element.lastElementChild)
+
+			if last and @inViewport(last)
+				@fetchQuery()
+			else if n < 5
+				setTimeout (=> @infiniteScroll(n + 1)), 50
 
 	lazyload: ->
 		window.myLazyLoad.update()
@@ -51,6 +54,7 @@ module.exports = class InfiniteScroll
 	fetchQuery: =>
 		if @query and !@updating
 			@updating = true
+
 			# calculate the new length of the query
 			# @subscribedIdList (and so the number of items we see on the page) may have grown since started
 			# and we must set the new length of the query to reflect that. Thus, we can't just increase
@@ -59,8 +63,7 @@ module.exports = class InfiniteScroll
 			@query.expression['$limit'] = newlength
 			@query.fetch (err) =>
 				console.error(err) if err
-				setTimeout (=> @updating = false ), 500
-				#@getItemsIds(@query.get())
+				@updating = false
 
 	# bottom of the element doesn't have to show entirely, it's enough if the element is showing just partly (20 pixels from the bottom)
 	inViewport: (el) =>
