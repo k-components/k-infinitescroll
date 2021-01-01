@@ -10,6 +10,8 @@ module.exports = class InfiniteScroll
 
 	destroy: ->
 		@scrollelement.removeEventListener('scroll', @infiniteScroll) if @scrollelement
+		@model.root.removeListener 'insert', @listener
+		@listener = null
 
 	create: ->
 		@inverted = @model.get 'inverted'
@@ -19,7 +21,7 @@ module.exports = class InfiniteScroll
 		scrollelement = @model.get('scrollelement')
 		@scrollelement = scrollelement && document.getElementById(scrollelement) or window
 		@step = parseInt(@model.get('step') or STEP_DEFAULT, 10)
-		@model.root.on 'insert', @datapath, @inserted
+		@listener = @model.root.on 'insert', @datapath, @inserted
 
 		setTimeout (=> @scrollelement.addEventListener 'scroll', @infiniteScroll(1)), 500
 
