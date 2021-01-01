@@ -10,10 +10,16 @@ module.exports = class InfiniteScroll
 
 	destroy: ->
 		@scrollelement.removeEventListener('scroll', @infiniteScroll) if @scrollelement
-		@model.root.removeListener 'insert', @listener
+
+		if @listener
+			@model.root.removeListener 'insert', @listener
+
 		@listener = null
 
 	create: ->
+		if @listener
+			@model.root.removeListener 'insert', @listener
+
 		@inverted = @model.get 'inverted'
 		@datapath = @model.get 'datapath'
 		@subscribedIdList = @model.get 'subscribedidlist'
