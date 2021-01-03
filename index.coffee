@@ -10,13 +10,14 @@ module.exports = class InfiniteScroll
 
 	destroy: ->
 		@scrollelement.removeEventListener('scroll', @infiniteScroll) if @scrollelement
+		@scrollelement = @query = null
 
 		if @listener
 			@model.root.removeListener 'insert', @listener
 
 		@listener = null
 
-	create: ->
+	createx: ->
 		if @listener
 			@model.root.removeListener 'insert', @listener
 
