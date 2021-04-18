@@ -4,7 +4,6 @@ module.exports = class InfiniteScroll
 	name: 'k-infinitescroll'
 	updating: false
 	element: false
-	datapath: null
 	query: null
 	step: null
 
@@ -17,7 +16,7 @@ module.exports = class InfiniteScroll
 
 		@listener = null
 
-	createx: ->
+	create: ->
 		if @listener
 			@model.root.removeListener 'insert', @listener
 
@@ -32,10 +31,8 @@ module.exports = class InfiniteScroll
 
 		setTimeout (=> @scrollelement.addEventListener 'scroll', @infiniteScroll(1)), 500
 
-		fromMap = @model.root._refLists.fromMap[@datapath]
-		if fromMap
-			queryHash = fromMap.idsSegments[1]
-			@query = @model.root._queries.get queryHash
+		hash = @model.get 'hash'
+		@query = @model.root._queries.map[@model.root.get(hash)]
 
 	infiniteScroll: (n = 1) =>
 		=>
