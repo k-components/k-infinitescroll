@@ -36,6 +36,9 @@ module.exports = class InfiniteScroll
 
 	infiniteScroll: (n = 1) =>
 		=>
+			if !document.body.contains(@element)
+				@element = document.getElementById(@model.get('element'))
+
 			last = @element and (if @inverted then @element.firstElementChild else @element.lastElementChild)
 
 			if last and @inViewport(last)
