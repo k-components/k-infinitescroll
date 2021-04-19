@@ -29,7 +29,10 @@ module.exports = class InfiniteScroll
 		@step = parseInt(@model.get('step') or STEP_DEFAULT, 10)
 		@listener = @model.root.on 'insert', @datapath, @inserted
 
-		setTimeout (=> @scrollelement.addEventListener 'scroll', @infiniteScroll(1)), 500
+		setTimeout (=>
+			if @scrollelement
+				@scrollelement.addEventListener 'scroll', @infiniteScroll(1)
+			), 500
 
 		hash = @model.get 'hash'
 		@query = @model.root._queries.map[@model.root.get(hash)]
