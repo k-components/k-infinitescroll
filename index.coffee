@@ -43,6 +43,9 @@ module.exports = class InfiniteScroll
 				@element = document.getElementById(@model.get('element'))
 
 			last = @element and (if @inverted then @element.firstElementChild else @element.lastElementChild)
+			# if last
+			# 	x = @inViewport(last)
+			# 	console.log last, x
 
 			if last and @inViewport(last)
 				@fetchQuery()
@@ -53,6 +56,7 @@ module.exports = class InfiniteScroll
 		window.myLazyLoad.update()
 
 	inserted: (idx, arr) =>
+		console.log idx, arr
 		if window.myLazyLoad
 			setTimeout @lazyload, 10
 			setTimeout @lazyload, 50
@@ -86,7 +90,6 @@ module.exports = class InfiniteScroll
 				rect.top >= 0 &&
 				rect.left >= 0 &&
 				rect.bottom > 0 &&
-				rect.bottom - 20 <= (window.innerHeight || document.documentElement.clientHeight) &&
-				rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+				rect.bottom - 20 <= (window.innerHeight || document.documentElement.clientHeight)
 			)
 
