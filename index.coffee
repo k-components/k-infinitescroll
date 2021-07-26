@@ -56,7 +56,6 @@ module.exports = class InfiniteScroll
 		window.myLazyLoad.update()
 
 	inserted: (idx, arr) =>
-		console.log idx, arr
 		if window.myLazyLoad
 			setTimeout @lazyload, 10
 			setTimeout @lazyload, 50
