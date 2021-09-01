@@ -1,3 +1,4 @@
+util = require 'sc-util'
 STEP_DEFAULT = '10'
 
 module.exports = class InfiniteScroll
@@ -6,19 +7,15 @@ module.exports = class InfiniteScroll
 	element: false
 	query: null
 	step: null
+	listeners: { insert:[], remove:[], change: [] }
 
 	destroy: ->
+		util.resetComponentListeners @model, @listeners
 		@scrollelement.removeEventListener('scroll', @infiniteScroll) if @scrollelement
 		@scrollelement = @query = null
 
-		if @listener
-			@model.root.removeListener 'insert', @listener
-
-		@listener = null
-
 	create: ->
-		if @listener
-			@model.root.removeListener 'insert', @listener
+		util.resetComponentListeners @model, @listeners
 
 		@inverted = @model.get 'inverted'
 		@datapath = @model.get 'datapath'
@@ -27,7 +24,10 @@ module.exports = class InfiniteScroll
 		scrollelement = @model.get('scrollelement')
 		@scrollelement = scrollelement && document.getElementById(scrollelement) or window
 		@step = parseInt(@model.get('step') or STEP_DEFAULT, 10)
-		@listener = @model.root.on 'insert', @datapath, @inserted
+		@listeners.insert.push(@model.root.on 'insert', @datapath, @inserted)
+
+		if @model.get('alternativepath')
+			@listeners.remove.push(@model.root.on 'remove', @model.at('alternativepath'), @removed)
 
 		setTimeout (=>
 			if @scrollelement
@@ -43,9 +43,6 @@ module.exports = class InfiniteScroll
 				@element = document.getElementById(@model.get('element'))
 
 			last = @element and (if @inverted then @element.firstElementChild else @element.lastElementChild)
-			# if last
-			# 	x = @inViewport(last)
-			# 	console.log last, x
 
 			if last and @inViewport(last)
 				@fetchQuery()
@@ -54,6 +51,9 @@ module.exports = class InfiniteScroll
 
 	lazyload: ->
 		window.myLazyLoad.update()
+
+	removed: =>
+		@infiniteScroll(1)()
 
 	inserted: (idx, arr) =>
 		if window.myLazyLoad
