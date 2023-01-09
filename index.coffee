@@ -1,4 +1,3 @@
-util = require 'sc-util'
 STEP_DEFAULT = '10'
 
 module.exports = class InfiniteScroll
@@ -7,16 +6,17 @@ module.exports = class InfiniteScroll
 	element: false
 	query: null
 	step: null
-	listeners: { insert:[], remove:[], change: [] }
 
 	destroy: ->
-		util.resetComponentListeners @model, @listeners
+		@model.root.removeAllMutationListenersForTypeAndPath('insert', @datapath)
+
+		if @model.get('alternativepath')
+			@model.root.removeAllMutationListenersForTypeAndPath('remove', @model.get('alternativepath'))
+
 		@scrollelement.removeEventListener('scroll', @infiniteScroll) if @scrollelement
 		@scrollelement = @query = null
 
 	create: ->
-		util.resetComponentListeners @model, @listeners
-
 		@inverted = @model.get 'inverted'
 		@datapath = @model.get 'datapath'
 		@subscribedIdList = @model.get 'subscribedidlist'
@@ -24,10 +24,10 @@ module.exports = class InfiniteScroll
 		scrollelement = @model.get('scrollelement')
 		@scrollelement = scrollelement && document.getElementById(scrollelement) or window
 		@step = parseInt(@model.get('step') or STEP_DEFAULT, 10)
-		@listeners.insert.push(@model.root.on 'insert', @datapath, @inserted)
+		@model.root.on 'insert', @datapath, @inserted
 
 		if @model.get('alternativepath')
-			@listeners.remove.push(@model.root.on 'remove', @model.at('alternativepath'), @removed)
+			@model.root.on 'remove', @model.get('alternativepath'), @removed
 
 		setTimeout (=>
 			if @scrollelement
