@@ -8,7 +8,8 @@ module.exports = class InfiniteScroll
 	step: null
 
 	destroy: ->
-		@model.root.removeAllMutationListenersForTypeAndPath('insert', @datapath)
+		if @datapath
+			@model.root.removeAllMutationListenersForTypeAndPath('insert', @datapath)
 
 		if @model.get('alternativepath')
 			@model.root.removeAllMutationListenersForTypeAndPath('remove', @model.get('alternativepath'))
@@ -24,7 +25,9 @@ module.exports = class InfiniteScroll
 		scrollelement = @model.get('scrollelement')
 		@scrollelement = scrollelement && document.getElementById(scrollelement) or window
 		@step = parseInt(@model.get('step') or STEP_DEFAULT, 10)
-		@model.root.on 'insert', @datapath, @inserted
+
+		if @datapath && @subscribedIdList
+			@model.root.on 'insert', @datapath, @inserted
 
 		if @model.get('alternativepath')
 			@model.root.on 'remove', @model.get('alternativepath'), @removed
@@ -35,7 +38,7 @@ module.exports = class InfiniteScroll
 			), 500
 
 		hash = @model.get 'hash'
-		@query = @model.root._queries.map[@model.root.get(hash)]
+		@query = @model.root._queries.map[hash]
 
 	infiniteScroll: (n = 1) =>
 		=>
@@ -62,9 +65,8 @@ module.exports = class InfiniteScroll
 			setTimeout @lazyload, 100
 			setTimeout @lazyload, 200
 
-		if idx
-			ids = (a.id for a in arr when a?.id)
-			@model.root.insert @subscribedIdList, idx, ids
+		ids = (a.id for a in arr when a?.id)
+		@model.root.insert @subscribedIdList, idx, ids
 
 	fetchQuery: =>
 		if @query and !@updating
