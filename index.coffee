@@ -26,7 +26,7 @@ module.exports = class InfiniteScroll
 		@scrollelement = scrollelement && document.getElementById(scrollelement) or window
 		@step = parseInt(@model.get('step') or STEP_DEFAULT, 10)
 
-		if @datapath && @subscribedIdList
+		if @datapath
 			@model.root.on 'insert', @datapath, @inserted
 
 		if @model.get('alternativepath')
@@ -65,8 +65,9 @@ module.exports = class InfiniteScroll
 			setTimeout @lazyload, 100
 			setTimeout @lazyload, 200
 
-		ids = (a.id for a in arr when a?.id)
-		@model.root.insert @subscribedIdList, idx, ids
+		if @subscribedIdList
+			ids = (a.id for a in arr when a?.id)
+			@model.root.insert @subscribedIdList, idx, ids
 
 	fetchQuery: =>
 		if @query and !@updating
@@ -76,8 +77,7 @@ module.exports = class InfiniteScroll
 			# @subscribedIdList (and so the number of items we see on the page) may have grown since started
 			# and we must set the new length of the query to reflect that. Thus, we can't just increase
 			# the $limit by @step
-			newlength = @model.root.get(@subscribedIdList).length + @step
-			@query.expression['$limit'] = newlength
+			@query.expression['$limit'] += @step
 			@query.fetch (err) =>
 				console.error(err) if err
 				@updating = false
