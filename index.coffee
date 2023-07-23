@@ -78,9 +78,13 @@ module.exports = class InfiniteScroll
 			# and we must set the new length of the query to reflect that. Thus, we can't just increase
 			# the $limit by @step
 			@query.expression['$limit'] += @step
-			@query.fetch (err) =>
+
+			# If we have @subscribedIdList, we want to fetch, because the items are subscribed through the list. 
+			# Otherwise we want to subscribe directly.
+			@query.refresh (err) =>
 				console.error(err) if err
 				@updating = false
+
 
 	# bottom of the element doesn't have to show entirely, it's enough if the element is showing just partly (20 pixels from the bottom)
 	inViewport: (el) =>
