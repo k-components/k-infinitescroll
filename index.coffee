@@ -8,16 +8,19 @@ module.exports = class InfiniteScroll
 	step: null
 
 	destroy: ->
+		listeners = @model.get('listeners')
+
 		if @datapath
-			@model.root.removeAllMutationListenersForTypeAndPath('insert', @datapath)
+			@model.root.removeMutationListeners('insert', @datapath, listeners)
 
 		if @model.get('alternativepath')
-			@model.root.removeAllMutationListenersForTypeAndPath('remove', @model.get('alternativepath'))
+			@model.root.removeMutationListeners('remove', @model.get('alternativepath'), listeners)
 
 		@scrollelement.removeEventListener('scroll', @infiniteScroll) if @scrollelement
 		@scrollelement = @query = null
 
 	create: ->
+		listeners = []
 		@inverted = @model.get 'inverted'
 		@datapath = @model.get 'datapath'
 		@subscribedIdList = @model.get 'subscribedidlist'
@@ -27,10 +30,10 @@ module.exports = class InfiniteScroll
 		@step = parseInt(@model.get('step') or STEP_DEFAULT, 10)
 
 		if @datapath
-			@model.root.on 'insert', @datapath, @inserted
+			listeners.push(@model.root.on 'insert', @datapath, @inserted)
 
 		if @model.get('alternativepath')
-			@model.root.on 'remove', @model.get('alternativepath'), @removed
+			listeners.push(@model.root.on 'remove', @model.get('alternativepath'), @removed)
 
 		setTimeout (=>
 			if @scrollelement
@@ -38,6 +41,7 @@ module.exports = class InfiniteScroll
 			), 500
 
 		hash = @model.get 'hash'
+		@model.set 'listeners', listeners
 		@query = @model.root._queries.map[hash]
 
 	infiniteScroll: (n = 1) =>
