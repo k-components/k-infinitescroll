@@ -1,8 +1,8 @@
 {
 	"name": "k-infinitescroll",
-	"version": "0.6.27",
+	"version": "0.6.28",
 	"description": "Kantele infinite scroll component",
-	"main": "index.coffee",
+	"main": "index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
