@@ -107,7 +107,12 @@ module.exports = (InfiniteScroll = (function() {
 
 			if (this.subscribedIdList) {
 				const ids = (Array.from(arr).filter((a) => (a != null ? a.id : undefined)).map((a) => a.id));
-				return this.model.root.insert(this.subscribedIdList, idx, ids);
+				// console.log('insert', this.subscribedIdList, ids);
+				if (this.inverted) {
+					this.model.root.insert(this.subscribedIdList, 0, ids.reverse());
+				} else {
+					this.model.root.insert(this.subscribedIdList, idx, ids);
+				}				
 			}
 		}
 
