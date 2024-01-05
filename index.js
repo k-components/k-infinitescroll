@@ -6,10 +6,10 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
-let InfiniteScroll;
+let InfiniteScroll, timer;
 const STEP_DEFAULT = '10';
 
-module.exports = (InfiniteScroll = (function() {
+module.exports = (InfiniteScroll = (function () {
 	InfiniteScroll = class InfiniteScroll {
 		constructor() {
 			this.infiniteScroll = this.infiniteScroll.bind(this);
@@ -65,7 +65,7 @@ module.exports = (InfiniteScroll = (function() {
 					return this.scrollelement.addEventListener('scroll', this.infiniteScroll(1));
 				}
 			}
-				), 500);
+			), 500);
 
 			const hash = this.model.get('hash');
 			this.model.set('listeners', listeners);
@@ -82,7 +82,7 @@ module.exports = (InfiniteScroll = (function() {
 				const last = this.element && (this.inverted ? this.element.firstElementChild : this.element.lastElementChild);
 
 				if (last && this.inViewport(last)) {
-					return this.fetchQuery();
+					return this.fetchQuery(0)();
 				} else if (n < 5) {
 					return setTimeout((() => this.infiniteScroll(n + 1)), 50);
 				}
@@ -112,26 +112,37 @@ module.exports = (InfiniteScroll = (function() {
 					this.model.root.insert(this.subscribedIdList, 0, ids.reverse());
 				} else {
 					this.model.root.insert(this.subscribedIdList, idx, ids);
-				}				
+				}
 			}
 		}
 
-		fetchQuery() {
-			if (this.query && !this.updating) {
-				this.updating = true;
+		fetchQuery(n) {
+			return () => {
+				if (this.query) {
+					if (this.updating) {
+						if (n < 10) {
+							if (timer) {
+								clearTimeout(timer);
+							}
+							timer = setTimeout(this.fetchQuery(n + 1), 500);
+						}
+					} else {
+						this.updating = true;
 
-				// calculate the new length of the query
-				// @subscribedIdList (and so the number of items we see on the page) may have grown since started
-				// and we must set the new length of the query to reflect that. Thus, we can't just increase
-				// the $limit by @step
-				this.query.expression['$limit'] += this.step;
+						// calculate the new length of the query
+						// @subscribedIdList (and so the number of items we see on the page) may have grown since started
+						// and we must set the new length of the query to reflect that. Thus, we can't just increase
+						// the $limit by @step
+						this.query.expression['$limit'] += this.step;
 
-				// If we have @subscribedIdList, we want to fetch, because the items are subscribed through the list. 
-				// Otherwise we want to subscribe directly.
-				return this.query.refresh(err => {
-					if (err) { console.error(err); }
-					return this.updating = false;
-				});
+						// If we have @subscribedIdList, we want to fetch, because the items are subscribed through the list. 
+						// Otherwise we want to subscribe directly.
+						return this.query.refresh(err => {
+							if (err) { console.error(err); }
+							return this.updating = false;
+						});
+					}
+				}
 			}
 		}
 
