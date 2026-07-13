@@ -17,6 +17,7 @@ module.exports = (InfiniteScroll = (function () {
 			this.inserted = this.inserted.bind(this);
 			this.fetchQuery = this.fetchQuery.bind(this);
 			this.inViewport = this.inViewport.bind(this);
+			this.hashChanged = this.hashChanged.bind(this);
 		}
 
 		static initClass() {
@@ -39,6 +40,7 @@ module.exports = (InfiniteScroll = (function () {
 			}
 
 			if (this.scrollelement) { this.scrollelement.removeEventListener('scroll', this.infiniteScroll); }
+			this.model.removeAllMutationListenersForTypeAndPath('change', 'hash');
 			return this.scrollelement = (this.query = null);
 		}
 
@@ -68,8 +70,14 @@ module.exports = (InfiniteScroll = (function () {
 			), 500);
 
 			const hash = this.model.get('hash');
+			this.model.on('change', 'hash', this.hashChanged);
 			this.model.set('listeners', listeners);
 			return this.query = this.model.root._queries.map[hash];
+		}
+
+		hashChanged(hash) {
+			this.updating = false;
+			this.query = hash ? this.model.root._queries.map[hash] : null;
 		}
 
 		infiniteScroll(n) {
