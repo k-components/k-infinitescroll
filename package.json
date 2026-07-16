@@ -1,6 +1,6 @@
 {
   "name": "k-infinitescroll",
-  "version": "0.6.30",
+  "version": "0.6.31",
   "description": "Kantele infinite scroll component",
   "main": "index.cjs",
   "scripts": {

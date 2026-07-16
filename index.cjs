@@ -114,7 +114,16 @@ module.exports = (InfiniteScroll = (function () {
 			}
 
 			if (this.subscribedIdList) {
-				const ids = (Array.from(arr).filter((a) => (a != null ? a.id : undefined)).map((a) => a.id));
+				const existingIds = new Set(Array.from(this.model.root.get(this.subscribedIdList) || []));
+				const ids = Array.from(arr)
+					.filter((a) => (a != null ? a.id : undefined))
+					.map((a) => a.id)
+					.filter(id => {
+						if (existingIds.has(id)) { return false; }
+						existingIds.add(id);
+						return true;
+					});
+				if (!ids.length) { return; }
 				// console.log('insert', this.subscribedIdList, ids);
 				if (this.inverted) {
 					this.model.root.insert(this.subscribedIdList, 0, ids.reverse());
