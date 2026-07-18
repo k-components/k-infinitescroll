@@ -6,7 +6,7 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/main/docs/suggestions.md
  */
-let InfiniteScroll, timer;
+let InfiniteScroll;
 const STEP_DEFAULT = '10';
 
 module.exports = (InfiniteScroll = (function () {
@@ -46,6 +46,8 @@ module.exports = (InfiniteScroll = (function () {
 
 		create() {
 			const listeners = [];
+			this.debugName = this.model.get('debug');
+			this.debugSequence = 0;
 			this.inverted = this.model.get('inverted');
 			this.datapath = this.model.get('datapath');
 			this.subscribedIdList = this.model.get('subscribedidlist');
@@ -80,6 +82,11 @@ module.exports = (InfiniteScroll = (function () {
 			this.query = hash ? this.model.root._queries.map[hash] : null;
 		}
 
+		debugLog(event, data) {
+			if (!this.debugName || typeof console === 'undefined') { return; }
+			console.info(`[${this.debugName} infinite scroll] ${event}`, data || {});
+		}
+
 		infiniteScroll(n) {
 			if (n == null) { n = 1; }
 			return () => {
@@ -90,6 +97,10 @@ module.exports = (InfiniteScroll = (function () {
 				const last = this.element && (this.inverted ? this.element.firstElementChild : this.element.lastElementChild);
 
 				if (last && this.inViewport(last)) {
+					this.debugLog('viewport-trigger', {
+						updating: this.updating,
+						limit: this.query && this.query.expression && this.query.expression.$limit
+					});
 					return this.fetchQuery(0)();
 				} else if (n < 5) {
 					return setTimeout((() => this.infiniteScroll(n + 1)), 50);
@@ -106,6 +117,7 @@ module.exports = (InfiniteScroll = (function () {
 		}
 
 		inserted(idx, arr) {
+			const insertedAt = typeof performance !== 'undefined' ? performance.now() : Date.now();
 			if (window.myLazyLoad) {
 				setTimeout(this.lazyload, 10);
 				setTimeout(this.lazyload, 50);
@@ -124,11 +136,23 @@ module.exports = (InfiniteScroll = (function () {
 						return true;
 					});
 				if (!ids.length) { return; }
-				// console.log('insert', this.subscribedIdList, ids);
 				if (this.inverted) {
 					this.model.root.insert(this.subscribedIdList, 0, ids.reverse());
 				} else {
 					this.model.root.insert(this.subscribedIdList, idx, ids);
+				}
+				this.debugLog('rows-inserted', {
+					traceId: this.debugTraceId,
+					added: ids.length,
+					index: idx,
+					requestElapsedMs: this.debugStartedAt == null ? null : Math.round((insertedAt - this.debugStartedAt) * 10) / 10
+				});
+				if (typeof requestAnimationFrame === 'function') {
+					requestAnimationFrame(() => requestAnimationFrame(() => this.debugLog('rows-painted', {
+						traceId: this.debugTraceId,
+						totalElapsedMs: this.debugStartedAt == null ? null : Math.round(((typeof performance !== 'undefined' ? performance.now() : Date.now()) - this.debugStartedAt) * 10) / 10,
+						renderedChildren: this.element ? this.element.childElementCount : null
+					})));
 				}
 			}
 		}
@@ -137,25 +161,39 @@ module.exports = (InfiniteScroll = (function () {
 			return () => {
 				if (this.query) {
 					if (this.updating) {
-						if (n < 10) {
-							if (timer) {
-								clearTimeout(timer);
-							}
-							timer = setTimeout(this.fetchQuery(n + 1), 500);
-						}
+						// Scroll and layout events commonly fire again while the current
+						// page is rendering. Retrying here starts another page as soon as
+						// the first refresh completes, even without a new user scroll.
+						this.debugLog('refresh-already-running', { traceId: this.debugTraceId, ignored: true });
+						return;
 					} else {
 						this.updating = true;
+						this.debugTraceId = ++this.debugSequence;
+						this.debugStartedAt = typeof performance !== 'undefined' ? performance.now() : Date.now();
+						const previousLimit = this.query.expression['$limit'];
 
 						// calculate the new length of the query
 						// @subscribedIdList (and so the number of items we see on the page) may have grown since started
 						// and we must set the new length of the query to reflect that. Thus, we can't just increase
 						// the $limit by @step
 						this.query.expression['$limit'] += this.step;
+						this.debugLog('refresh-start', {
+							traceId: this.debugTraceId,
+							previousLimit,
+							nextLimit: this.query.expression['$limit'],
+							expression: this.query.expression
+						});
 
 						// If we have @subscribedIdList, we want to fetch, because the items are subscribed through the list. 
 						// Otherwise we want to subscribe directly.
 						return this.query.refresh(err => {
 							if (err) { console.error(err); }
+							this.debugLog('refresh-complete', {
+								traceId: this.debugTraceId,
+								elapsedMs: Math.round(((typeof performance !== 'undefined' ? performance.now() : Date.now()) - this.debugStartedAt) * 10) / 10,
+								error: err ? `${err}` : null,
+								resultCount: this.query && this.query.get ? (this.query.get() || []).length : null
+							});
 							return this.updating = false;
 						});
 					}
